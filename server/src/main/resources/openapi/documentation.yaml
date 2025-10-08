@@ -1,0 +1,119 @@
+openapi: 3.0.3
+info:
+  title: Application API
+  description: API для регистрации и аутентификации пользователей
+  version: 1.0.0
+servers:
+  - url: http://0.0.0.0:9090
+    description: Development server
+paths:
+  /:
+    get:
+      summary: Тестовый endpoint
+      description: Возвращает Hello World! для проверки работы API
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Hello World!"
+  /register:
+    post:
+      summary: Регистрация нового пользователя
+      description: Создает нового пользователя в системе и возвращает токен аутентификации
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterReceiveRemote'
+            example:
+              login: "john_doe"
+              email: "john@example.com"
+              password: "securepassword123"
+      responses:
+        "200":
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponseRemote'
+              example:
+                token: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        "400":
+          description: Невалидный email или ошибка создания пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Email is not valid"
+        "409":
+          description: Пользователь уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "User already exists"
+
+components:
+  schemas:
+    RegisterReceiveRemote:
+      type: object
+      required:
+        - login
+        - email
+        - password
+      properties:
+        login:
+          type: string
+          description: Логин пользователя (3-25 символов)
+          minLength: 3
+          maxLength: 25
+          example: "john_doe"
+        email:
+          type: string
+          description: Email пользователя
+          format: email
+          example: "john@example.com"
+        password:
+          type: string
+          description: Пароль пользователя (минимум 6 символов)
+          minLength: 6
+          example: "securepassword123"
+
+    RegisterResponseRemote:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          description: JWT токен для аутентификации
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Сообщение об ошибке
+          example: "User already exists"
+
+    User:
+      type: object
+      properties:
+        login:
+          type: string
+          example: "john_doe"
+        email:
+          type: string
+          example: "john@example.com"
+        username:
+          type: string
+          example: "John Doe"
