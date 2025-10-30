@@ -4,7 +4,6 @@ import org.orng.shelezyaka.core.domain.models.Catastrophe
 import org.orng.shelezyaka.core.domain.models.Game
 import org.orng.shelezyaka.core.domain.models.GameId
 import org.orng.shelezyaka.core.domain.models.GamePhase
-import org.orng.shelezyaka.core.domain.models.LobbyId
 import org.orng.shelezyaka.core.domain.models.OperationResult
 import org.orng.shelezyaka.core.domain.models.Player
 import org.orng.shelezyaka.core.domain.models.PlayerId
@@ -17,9 +16,6 @@ class InMemoryGameRepository : GameRepository {
     private val idCounter = AtomicInteger(1)
 
     override suspend fun findById(id: GameId): Game? = games[id]
-
-    override suspend fun findByLobby(lobbyId: LobbyId): Game? =
-        games.values.find { it.lobbyId == lobbyId }
 
     override suspend fun findByPlayer(playerId: PlayerId): List<Game> =
         games.values.filter { it.players.containsKey(playerId) }

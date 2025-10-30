@@ -3,6 +3,7 @@ package org.orng.shelezyaka.core.domain.models
 data class GameConfig(
     val totalDays: Int,
     val startMoney: Double,
+    val maxPlayers : Int,
     val availableResourceIds: Set<ResourceId>,
     val availableCatastropheIds: Set<CatastropheId>,
     val maxCreditMultiplier: Double = 2.0,

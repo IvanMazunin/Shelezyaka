@@ -1,8 +1,18 @@
 package org.orng.shelezyaka.core.domain.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
+enum class PlayerRole {
+    CREATOR, PLAYER, OBSERVER
+}
+
+@Serializable
 data class Player(
     val id: PlayerId,
     val username: String,
+    val sessionId : String,
+    val role : PlayerRole,
     val money: Double,
     val resources: Map<ResourceId, Int>, // resourceId -> quantity
     val credit: Double = 0.0,

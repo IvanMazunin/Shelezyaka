@@ -6,14 +6,20 @@ object CatastrophePool {
             id =  CatastropheId("money_halving"),
             name = "Денежная реформа",
             description = "Все деньги делятся пополам",
-            effect = Catastrophe.HALF_MONEY_EFFECT
+            effect = { game, _ ->
+                // Специфическая для ресурса катастрофа
+                game // В реальной реализации добавим модификатор цен
+            }
         ),
 
         CatastropheId("credit_forgiveness") to Catastrophe(
             id =  CatastropheId("credit_forgiveness"),
             name = "Кредитная амнистия",
             description = "Все кредиты прощаются",
-            effect = Catastrophe.CREDIT_FORGIVENESS_EFFECT
+            effect = { game, _ ->
+                // Специфическая для ресурса катастрофа
+                game // В реальной реализации добавим модификатор цен
+            }
         ),
 
         CatastropheId("nano_boom") to Catastrophe(

@@ -1,7 +1,6 @@
 package org.orng.shelezyaka.features.config
 
 import org.orng.shelezyaka.core.domain.repositories.GameRepository
-import org.orng.shelezyaka.core.domain.repositories.LobbyRepository
 import org.orng.shelezyaka.core.domain.repositories.ResourceRepository
 import org.orng.shelezyaka.core.domain.repositories.UserRepository
 import org.orng.shelezyaka.core.domain.services.GameEngineService
@@ -15,7 +14,6 @@ object DependencyConfig {
     private val userRepository: UserRepository by lazy { InMemoryUserRepository() }
     private val gameRepository: GameRepository by lazy { InMemoryGameRepository() }
     private val resourceRepository: ResourceRepository by lazy { InMemoryResourceRepository() }
-    private val lobbyRepository: LobbyRepository by lazy { InMemoryLobbyRepository() }
 
     // Сервисы
     private val gameEngineService: GameEngineService by lazy {

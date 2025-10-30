@@ -8,75 +8,90 @@ import org.orng.shelezyaka.core.domain.models.Player
 import org.orng.shelezyaka.core.domain.repositories.GameRepository
 import org.orng.shelezyaka.core.domain.repositories.ResourceRepository
 
-class GameEngineService(
-    private val gameRepository: GameRepository,
-    private val resourceRepository: ResourceRepository,
-) {
+class GameEngineService(private val sessionService: GameSessionService) {
 
-    suspend fun processMorningPhase(gameId: GameId): OperationResult<Game> {
-        val game = gameRepository.findById(gameId) ?:
-        return OperationResult.Failure("Game not found")
+    fun processMorningPhase(sessionId: String): GameSession? {
+        val session = sessionService.getSession(sessionId) ?: return null
 
-        // Применяем эффекты ресурсов
-        val updatedPlayers = game.players.mapValues { (_, player) ->
-            applyResourceEffects(player, game.currentDay)
-        }
-
-        val updatedGame = game.copy(players = updatedPlayers)
-        return gameRepository.save(updatedGame)
-    }
-
-    suspend fun processDayPhase(gameId: GameId): OperationResult<Game> {
-        val game = gameRepository.findById(gameId) ?:
-        return OperationResult.Failure("Game not found")
-
-        // Генерируем катастрофу (будет реализовано в use case)
-        // Применяем эффекты катастрофы
-
-        val updatedGame = game.copy(phase = GamePhase.EVENING)
-        return gameRepository.save(updatedGame)
-    }
-
-    suspend fun processEveningPhase(gameId: GameId): OperationResult<Game> {
-        val game = gameRepository.findById(gameId) ?:
-        return OperationResult.Failure("Game not found")
-
-        // Выбираем случайный ресурс для продажи
-        val randomResourceId = game.config.availableResourceIds.random()
-        val (_, sellPrice) = resourceRepository.getPrices(
-           randomResourceId,
-            game.currentDay
-        )
-
-        // Обновляем деньги игроков
-        val updatedPlayers = game.players.mapValues { (_, player) ->
-            val quantity = player.resources[randomResourceId] ?: 0
-            player.copy(
-                money = player.money + (quantity * sellPrice),
-                resources = player.resources - randomResourceId
-            )
-        }
-
-        val updatedGame = game.copy(
-            players = updatedPlayers,
-            phase = if (game.currentDay >= game.config.totalDays) {
-                GamePhase.MORNING
-            } else {
-                GamePhase.MORNING
-            }
-        )
-
-        return gameRepository.save(updatedGame)
-    }
-
-    suspend fun applyResourceEffects(player: Player, currentDay: Int): Player {
-        var updatedPlayer = player
-        player.resources.keys.forEach { resourceId ->
-            val resource = resourceRepository.findById(resourceId)
-            resource?.effect?.invoke(updatedPlayer, currentDay)?.let {
-                updatedPlayer = it
+        // Применяем эффекты ресурсов и кредитов
+        session.players.filter { it.role == PlayerRole.PLAYER }.forEach { player ->
+            // Начисляем проценты по кредиту
+            if (player.credit > 0) {
+                player.credit += (player.credit * player.creditRate) / 100
             }
         }
-        return updatedPlayer
+
+        session.currentPhase = GamePhase.DAY
+        return session
+    }
+
+    fun processDayPhase(sessionId: String): Disaster? {
+        val session = sessionService.getSession(sessionId) ?: return null
+
+        if (!session.disastersEnabled) {
+            session.currentPhase = GamePhase.EVENING
+            return null
+        }
+
+        val disaster = sessionService.getRandomDisaster()
+        disaster.effect(session)
+
+        session.currentPhase = GamePhase.EVENING
+        return disaster
+    }
+
+    fun processEveningPhase(sessionId: String): ResourceType? {
+        val session = sessionService.getSession(sessionId) ?: return null
+
+        val sellResource = session.availableResources.random()
+        session.market.sellResource = sellResource
+        session.market.sellPrice = (session.market.buyPrices[sellResource] ?: 10) * 2
+
+        // Переход к следующему дню
+        if (session.currentDay >= session.totalDays) {
+            endGame(sessionId)
+        } else {
+            session.currentDay++
+            session.currentPhase = GamePhase.MORNING
+        }
+
+        return sellResource
+    }
+
+    fun playerBuyResource(sessionId: String, playerId: String, resource: ResourceType, quantity: Int): Boolean {
+        val session = sessionService.getSession(sessionId) ?: return false
+        val player = session.players.find { it.id == playerId && it.role == PlayerRole.PLAYER } ?: return false
+
+        val price = session.market.buyPrices[resource] ?: return false
+        val totalCost = price * quantity
+
+        if (player.credit >= totalCost) {
+            player.credit -= totalCost
+            player.resources[resource] = (player.resources[resource] ?: 0) + quantity
+            return true
+        }
+
+        return false
+    }
+
+    fun playerSellResource(sessionId: String, playerId: String, quantity: Int): Boolean {
+        val session = sessionService.getSession(sessionId) ?: return false
+        val player = session.players.find { it.id == playerId && it.role == PlayerRole.PLAYER } ?: return false
+        val sellResource = session.market.sellResource ?: return false
+
+        val currentQuantity = player.resources[sellResource] ?: 0
+        if (currentQuantity >= quantity) {
+            player.resources[sellResource] = currentQuantity - quantity
+            player.credit += session.market.sellPrice * quantity
+            return true
+        }
+
+        return false
+    }
+
+    private fun endGame(sessionId: String) {
+        val session = sessionService.getSession(sessionId) ?: return
+        session.isActive = false
+        // Здесь можно добавить логику подсчета очков и определения победителя
     }
 }

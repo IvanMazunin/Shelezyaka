@@ -16,7 +16,7 @@ class CreateGame(
     private val resourcePool: ResourcePool,
     private val catastrophePool: CatastrophePool
 ) {
-    operator fun invoke(lobby: Lobby): OperationResult<Game> {
+    operator fun invoke(): OperationResult<Game> {
         // Валидация выбранных ресурсов
         val availableResources = resourcePool.getResources(lobby.config.availableResourceIds)
         if (availableResources.size != lobby.config.availableResourceIds.size) {
