@@ -8,28 +8,25 @@ enum class GamePhase {
 }
 
 enum class GameStatus {
-    ACTIVE, FINISHED
+    WAITING, ACTIVE, FINISHED
 }
 
 data class Game(
     val id: GameId,
-    val lobbyId: LobbyId,
     val config: GameConfig,
+
     val currentDay: Int = 1,
     val phase: GamePhase = GamePhase.MORNING,
+
     val activeCatastrophes: List<Catastrophe> = emptyList(),
+
+    val players: Map<PlayerId, Player>,
+    val spectators: Map<PlayerId, Player>,
+
     val status: GameStatus = GameStatus.ACTIVE,
-    val players: Map<PlayerId, Player>, // playerId -> Player
     val createdAt: Long = System.currentTimeMillis()
 ) {
     fun isFinished(): Boolean = currentDay > config.totalDays || status == GameStatus.FINISHED
     fun getWinner(): Player? = if (isFinished()) players.values.maxByOrNull { it.money } else null
 
-    fun canProceedToNextPhase(): Boolean {
-        return when (phase) {
-            GamePhase.MORNING -> players.values.all { it.hasTakenCredit }
-            GamePhase.DAY -> true // Всегда можно перейти после катастрофы
-            GamePhase.EVENING -> true // Всегда можно перейти после продажи
-        }
-    }
 }

@@ -9,7 +9,7 @@ object ResourcePool {
             helpText = "Микроскопические самореплицирующиеся машины",
             baseBuyPrice = 100.0,
             baseSellPrice = 50.0,
-            effect = Resource.DOUBLING_EFFECT
+            effect =  Resource.DOUBLING_EFFECT
         ),
 
         ResourceId("quantum_chips") to Resource(

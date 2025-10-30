@@ -9,9 +9,6 @@ value class PlayerId(val value: UUID)
 value class GameId(val value: UUID)
 
 @JvmInline
-value class LobbyId(val value: UUID)
-
-@JvmInline
 value class UserId(val value: UUID)
 
 @JvmInline

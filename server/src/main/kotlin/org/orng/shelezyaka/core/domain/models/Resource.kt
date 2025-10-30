@@ -10,18 +10,14 @@ data class Resource(
     val baseBuyPrice: Double,
     val baseSellPrice: Double,
     val imageUrl: String? = null,
-    val effect: ResourceEffect = { player, _ -> player } // Default: no effect
+    val effect: ResourceEffect = { player, _ -> player }
 ) {
     companion object {
         // Стандартные эффекты ресурсов
         val DOUBLING_EFFECT: ResourceEffect = { player, currentDay ->
-            if (currentDay % 2 == 0) {
-                player.copy(
-                    resources = player.resources.mapValues { (_, quantity) -> quantity * 2 }
-                )
-            } else {
-                player
-            }
+            player.copy(
+                resources = player.resources.mapValues { (_, quantity) -> quantity * 2 }
+            )
         }
 
         val TECH_BOOM_EFFECT: ResourceEffect = { player, currentDay ->
